@@ -37,7 +37,7 @@ class Lda2vec:
             pretrained_embeddings (None, optional): Description
         
         """
-        self.config = tf.ConfigProto()
+        self.config = tf.compat.v1.ConfigProto()
         self.config.gpu_options.allow_growth = True
         self.sesh = tf.Session(config=self.config)
         self.moving_avgs = tf.train.ExponentialMovingAverage(0.9)
