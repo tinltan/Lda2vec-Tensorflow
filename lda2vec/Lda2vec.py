@@ -86,7 +86,7 @@ class Lda2vec:
                 tf.compat.v1.add_to_collection(Lda2vec.RESTORE_KEY, handle)
 
             # Add Word Embedding Variables to collection
-           tf.compat.v1.add_to_collection(Lda2vec.RESTORE_KEY, self.w_embed.embedding)           
+           tf.compat.v1.add_to_collection(Lda2vec.RESTORE_KEY, self.w_embed.embedding)
 		   tf.compat.v1.add_to_collection(Lda2vec.RESTORE_KEY, self.w_embed.nce_weights)
            tf.compat.v1.add_to_collection(Lda2vec.RESTORE_KEY, self.w_embed.nce_biases)
 
