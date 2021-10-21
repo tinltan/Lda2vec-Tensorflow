@@ -39,7 +39,7 @@ class Lda2vec:
         """
         self.config = tf.compat.v1.ConfigProto()
         self.config.gpu_options.allow_growth = True
-        self.sesh = tf.Session(config=self.config)
+        self.sesh = tf.compat.v1.Session(config=self.config)
         self.moving_avgs = tf.train.ExponentialMovingAverage(0.9)
         self.num_unique_documents = num_unique_documents
         self.vocab_size = vocab_size
