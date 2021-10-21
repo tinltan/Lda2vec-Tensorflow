@@ -66,7 +66,7 @@ class Lda2vec:
 
             # Load pretrained embeddings if provided.
             if isinstance(pretrained_embeddings, np.ndarray):
-                W_in = tf.constant(pretrained_embeddings, name="word_embedding") if fixed_words else tf.get_variable("word_embedding", shape=[self.vocab_size,self.embedding_size], initializer=tf.constant_initializer(pretrained_embeddings))
+                W_in = tf.constant(pretrained_embeddings, name="word_embedding") if fixed_words else tf.Variable("word_embedding", shape=[self.vocab_size,self.embedding_size], initializer=tf.constant_initializer(pretrained_embeddings))
             else:
                 W_in = None
 
@@ -83,16 +83,16 @@ class Lda2vec:
 
 
             for handle in handles:
-                tf.add_to_collection(Lda2vec.RESTORE_KEY, handle)
+                tf.compat.v1.add_to_collection(Lda2vec.RESTORE_KEY, handle)
 
             # Add Word Embedding Variables to collection
-            tf.add_to_collection(Lda2vec.RESTORE_KEY, self.w_embed.embedding)
-            tf.add_to_collection(Lda2vec.RESTORE_KEY, self.w_embed.nce_weights)
-            tf.add_to_collection(Lda2vec.RESTORE_KEY, self.w_embed.nce_biases)
+           tf.compat.v1.add_to_collection(Lda2vec.RESTORE_KEY, self.w_embed.embedding)
+            tf.compat.v1.add_to_collection(Lda2vec.RESTORE_KEY, self.w_embed.nce_weights)
+           tf.compat.v1.add_to_collection(Lda2vec.RESTORE_KEY, self.w_embed.nce_biases)
 
             # Add Doc Mixture Variables to collection
-            tf.add_to_collection(Lda2vec.RESTORE_KEY, self.mixture.doc_embedding)
-            tf.add_to_collection(Lda2vec.RESTORE_KEY, self.mixture.topic_embedding)
+           tf.compat.v1.add_to_collection(Lda2vec.RESTORE_KEY, self.mixture.doc_embedding)
+            tf.compat.v1.add_to_collection(Lda2vec.RESTORE_KEY, self.mixture.topic_embedding)
 
             (self.x, self.y, self.docs, self.step, self.switch_loss,
             self.word_context, self.doc_context, self.loss_word2vec,
@@ -101,7 +101,7 @@ class Lda2vec:
 
         else:
             meta_graph = logdir + '/model.ckpt'
-            tf.train.import_meta_graph(meta_graph + '.meta').restore(self.sesh, meta_graph)
+            tf.compat.v1.train.import_meta_graph(meta_graph + '.meta').restore(self.sesh, meta_graph)
             handles = self.sesh.graph.get_collection(Lda2vec.RESTORE_KEY)
 
             (self.x, self.y, self.docs, self.step, self.switch_loss,
@@ -138,11 +138,11 @@ class Lda2vec:
         """
         # Model Inputs
         # Pivot Words
-        x = tf.placeholder(tf.int32, shape=[None], name='x_pivot_idxs')
+        x = tf.compat.v1.placeholder(tf.int32, shape=[None], name='x_pivot_idxs')
         # Context/Target Words
-        y = tf.placeholder(tf.int64, shape=[None], name='y_target_idxs')
+        y = tf.compat.v1.placeholder(tf.int64, shape=[None], name='y_target_idxs')
         # Document ID
-        docs = tf.placeholder(tf.int32, shape=[None], name='doc_ids')
+        docs = tf.compat.v1.placeholder(tf.int32, shape=[None], name='doc_ids')
 
         # Global Step
         step = tf.Variable(0, trainable=False, name='global_step')
@@ -181,10 +181,10 @@ class Lda2vec:
                                                         name='Optimizer')
         
         # Initialize all variables
-        self.sesh.run(tf.global_variables_initializer(), options=tf.RunOptions(report_tensor_allocations_upon_oom=True))
+        self.sesh.run(tf.compat.v1.global_variables_initializer(), options=tf.compat.v1.RunOptions(report_tensor_allocations_upon_oom=True))
         
         # Create a merged summary of variables
-        merged = tf.summary.merge_all()
+        merged = tf.compat.v1.summary.merge_all()
 
         to_return = [x, y, docs, step, switch_loss, word_context, doc_context,
                      loss_word2vec, fraction, loss_lda, loss, loss_avgs_op, optimizer, merged]
@@ -214,20 +214,20 @@ class Lda2vec:
         # Calculate fraction used in DL Loss calculation
         temp_fraction = self.batch_size * 1.0 / data_size
         # Assign the fraction placeholder variable with the value we calculated
-        self.sesh.run(tf.assign(self.fraction, temp_fraction))
+        self.sesh.run(tf.compat.v1.assign(self.fraction, temp_fraction))
 
         # Calculate the number of iterations per epoch so we can figure out when to switch the loss
         iters_per_epoch = int(data_size / self.batch_size) + np.ceil(data_size % self.batch_size)
         # Calculate what step we would be on @ the switch loss epoch
         switch_loss_step = iters_per_epoch * switch_loss_epoch
         # Assign the switch loss variable with the step we just calculated
-        self.sesh.run(tf.assign(self.switch_loss, switch_loss_step))
+        self.sesh.run(tf.compat.v1.assign(self.switch_loss, switch_loss_step))
 
         if self.save_graph_def:
             # Initialize a tensorflow Saver object
-            saver = tf.train.Saver()
+            saver = tf.compat.v1.train.Saver()
             # Initialize a tensorflow summary writer so we can save logs
-            writer = tf.summary.FileWriter(self.logdir + '/', graph=self.sesh.graph)
+            writer = tf.compat.v1.summary.FileWriter(self.logdir + '/', graph=self.sesh.graph)
 
         # Iterate over the number of epochs we want to train for
         for e in range(num_epochs):
@@ -274,13 +274,13 @@ class Lda2vec:
         between different embedding matrixes.
         """
         self.normed_embed_dict = {}
-        norm = tf.sqrt(tf.reduce_sum(self.mixture.topic_embedding ** 2, 1, keep_dims=True))
+        norm = tf.math.sqrt(tf.reduce_sum(self.mixture.topic_embedding ** 2, 1, keep_dims=True))
         self.normed_embed_dict['topic'] = self.mixture.topic_embedding / norm
-        norm = tf.sqrt(tf.reduce_sum(self.w_embed.embedding ** 2, 1, keep_dims=True))
+        norm = tf.math.sqrt(tf.reduce_sum(self.w_embed.embedding ** 2, 1, keep_dims=True))
         self.normed_embed_dict['word'] = self.w_embed.embedding / norm
-        norm = tf.sqrt(tf.reduce_sum(self.mixture.doc_embedding ** 2, 1, keep_dims=True))
+        norm = tf.math.sqrt(tf.reduce_sum(self.mixture.doc_embedding ** 2, 1, keep_dims=True))
         self.normed_embed_dict['doc'] = self.mixture.doc_embedding / norm
-        self.idxs_in = tf.placeholder(tf.int32, shape=[None], name='idxs')
+        self.idxs_in = tf.compat.v1.placeholder(tf.int32, shape=[None], name='idxs')
         self.compute_normed = True
 
     def get_k_closest(self, idxs, in_type='word', vs_type='word', k=10, idx_to_word=None, verbose=False):
@@ -311,7 +311,7 @@ class Lda2vec:
         self.batch_array = tf.nn.embedding_lookup(self.normed_embed_dict[in_type], self.idxs_in)
         self.cosine_similarity = tf.matmul(self.batch_array, tf.transpose(self.normed_embed_dict[vs_type], [1, 0]))
         feed_dict = {self.idxs_in: idxs}
-        sim, sim_idxs = self.sesh.run(tf.nn.top_k(self.cosine_similarity, k=k), feed_dict=feed_dict)
+        sim, sim_idxs = self.sesh.run(tf.math.top_k(self.cosine_similarity, k=k), feed_dict=feed_dict)
         if idx_to_word:
             if verbose and vs_type=="word":
                 print('---------Closest {} words to given indexes----------'.format(k))
