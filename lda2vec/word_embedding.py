@@ -13,7 +13,7 @@ class Word_Embedding():
                            name="word_embedding") if W_in is None else W_in
 
         # Construct nce loss for word embeddings
-        self.nce_weights = tf.Variable(tf.truncated_normal([vocab_size, embedding_size],
+        self.nce_weights = tf.Variable(tf.random.truncated_normal([vocab_size, embedding_size],
                                                            stddev=tf.sqrt(1 / embedding_size)),
                                                            name="nce_weights") if nce_w_in is None else nce_w_in
         self.nce_biases = tf.Variable(tf.zeros([vocab_size]), name="nce_biases") if nce_b_in is None else nce_b_in
