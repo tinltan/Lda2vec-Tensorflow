@@ -26,7 +26,7 @@ class EmbedMixture:
 
         self.topic_embedding = tf.Variable('topic_embedding', shape=[n_topics, n_dim],
                                                dtype=tf.float32,
-                                               initializer=tf.orthogonal_initializer(gain=scalar)) if factors_in is None else factors_in
+                                               initializer=tf.keras.initializers.Orthogonal(gain=scalar)) if factors_in is None else factors_in
 
 
     def __call__(self, doc_ids=None, update_only_docs=False, softmax=True):
