@@ -87,12 +87,12 @@ class Lda2vec:
 
             # Add Word Embedding Variables to collection
            tf.compat.v1.add_to_collection(Lda2vec.RESTORE_KEY, self.w_embed.embedding)
-            tf.compat.v1.add_to_collection(Lda2vec.RESTORE_KEY, self.w_embed.nce_weights)
+           tf.compat.v1.add_to_collection(Lda2vec.RESTORE_KEY, self.w_embed.nce_weights)
            tf.compat.v1.add_to_collection(Lda2vec.RESTORE_KEY, self.w_embed.nce_biases)
 
             # Add Doc Mixture Variables to collection
            tf.compat.v1.add_to_collection(Lda2vec.RESTORE_KEY, self.mixture.doc_embedding)
-            tf.compat.v1.add_to_collection(Lda2vec.RESTORE_KEY, self.mixture.topic_embedding)
+           tf.compat.v1.add_to_collection(Lda2vec.RESTORE_KEY, self.mixture.topic_embedding)
 
             (self.x, self.y, self.docs, self.step, self.switch_loss,
             self.word_context, self.doc_context, self.loss_word2vec,
